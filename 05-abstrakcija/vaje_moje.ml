@@ -1,7 +1,7 @@
 (*----------------------------------------------------------------------------*
  # Abstrakcija
 [*----------------------------------------------------------------------------*)
-jhfs
+
 (*----------------------------------------------------------------------------*
  ## Naravna števila
 [*----------------------------------------------------------------------------*)
@@ -20,9 +20,14 @@ module type NAT = sig
 
   val eq  : t -> t -> bool
   val zero : t
+  val one : t
+  val add : t -> t -> t
+  val sub : t -> t -> t
+  val mul : t -> t -> t
+  val to_int : t -> int
+  val of_int : int -> t
   (* Dodajte manjkajoče! *)
-  (* val to_int : t -> int *)
-  (* val of_int : int -> t *)
+
 end
 
 (*----------------------------------------------------------------------------*
@@ -36,8 +41,15 @@ end
 module Nat_int : NAT = struct
 
   type t = int
-  let eq x y = failwith "later"
+
+  let eq x y = x = y
   let zero = 0
+  let one = 1
+  let add x y = x + y
+  let sub x y = x - y
+  let mul x y = x * y
+  let to_int x = x
+  let of_int x = x
   (* Dodajte manjkajoče! *)
 
 end
@@ -53,9 +65,45 @@ end
 
 module Nat_peano : NAT = struct
 
-  type t = unit (* To morate spremeniti! *)
-  let eq x y = failwith "later"
-  let zero = () (* To morate spremeniti! *)
+  type t = 
+    | Zero
+    | Succ of t
+
+  (* let eq x y = x = y --- to dela *)
+  let rec eq x y = match x, y with
+    | Zero, Zero -> true
+    | Succ x', Succ y' -> eq x' y'
+    | _ -> false
+
+  let zero = Zero
+
+  let one = Succ Zero
+
+  let rec add x y = match x with
+    | Zero -> y
+    | Succ x' -> Succ (add x' y)
+
+  let rec sub x y = match x, y with
+    | Zero, _ -> Zero
+    | _, Zero -> x
+    | Succ x', Succ y' -> sub x' y'
+
+  let rec mul x y = match x, y with
+    | Zero, _ -> Zero
+    | _, Zero -> Zero
+    | Succ x', y -> add y (mul x' y)
+
+  let rec to_int x = match x with
+    | Zero -> 0
+    | Succ x' -> 1 + to_int x'
+
+  let of_int x = match x with
+    | 0 -> Zero
+    | x -> let rec aux x acc = match x with (* acc predstavlja že sestavljeno strukturo oblike Succ(Succ ...) *)
+      | 0 -> acc
+      | x -> aux (x - 1) (Succ acc) (* Če x ni 0, pokliče samo sebe z x - 1 in posodobi akumulator, tako da doda še en nivo Succ acc *)
+    in (* aux se za vsak korak x - 1 obdaja z dodatnim Succ, dokler ne doseže x = 0, kjer vrne celotno strukturo *)
+    aux x Zero (* s tem začnemo *)
   (* Dodajte manjkajoče! *)
 
 end
@@ -76,13 +124,24 @@ end
  `Nat`.
 [*----------------------------------------------------------------------------*)
 
-let sum_nat_100 = 
+(* let sum_nat_100 = 
+  
   (* let module Nat = Nat_int in *)
   let module Nat = Nat_peano in
   Nat.zero (* to popravite na ustrezen izračun *)
   (* |> Nat.to_int *)
-(* val sum_nat_100 : int = 5050 *)
+(* val sum_nat_100 : int = 5050 *) *)
 
+let sum_nat_100 = 
+  let module Nat = Nat_peano in
+  (* let module Nat = Nat_int in *)
+  let rec aux n acc =
+    if Nat.eq n Nat.zero then acc
+    else aux (Nat.sub n Nat.one) (Nat.add n acc)
+  in
+  aux (Nat.of_int 100) Nat.zero
+  |> Nat.to_int
+  
 (*----------------------------------------------------------------------------*
  ## Kompleksna števila
 [*----------------------------------------------------------------------------*)
@@ -135,6 +194,10 @@ let sum_nat_100 =
 module type COMPLEX = sig
   type t
   val eq : t -> t -> bool
+  val zero : t
+  val one : t
+  val i : t
+  val neg : t -> t
   (* Dodajte manjkajoče! *)
 end
 
@@ -147,7 +210,17 @@ module Cartesian : COMPLEX = struct
 
   type t = {re : float; im : float}
 
-  let eq x y = failwith "later"
+  let eq x y = match x, y with
+    | {re = re1; im = im1}, {re = re2; im = im2} -> re1 = re2 && im1 = im2
+
+  let zero = {re = 0.; im = 0.}
+
+  let one = {re = 1.; im = 0.}
+
+  let i = {re = 0.; im = 1.}
+
+  let neg x = match x with
+    | {re = re; im = im} -> {re = -.re; im = -.im}
   (* Dodajte manjkajoče! *)
 
 end
@@ -168,7 +241,19 @@ module Polar : COMPLEX = struct
   let rad_of_deg deg = (deg /. 180.) *. pi
   let deg_of_rad rad = (rad /. pi) *. 180.
 
-  let eq x y = failwith "later"
+  let eq x y = match x, y with
+    | {magn = magn1; arg = arg1}, {magn = magn2; arg = arg2} -> 
+        Float.equal magn1 magn2 && Float.equal (mod_float arg1 (2. *. Float.pi)) (mod_float arg2 (2. *. Float.pi))
+
+  let zero = { magn = 0.; arg = 0. }
+
+  let one = { magn = 1.; arg = 0. }
+
+  let i = { magn = 1.; arg = pi /. 2. }
+
+  let neg x = match x with
+    | {magn = magn; arg = arg} -> {magn = magn; arg = mod_float (arg +. Float.pi) (2. *. Float.pi)}
+
   (* Dodajte manjkajoče! *)
 
 end
