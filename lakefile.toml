@@ -1,0 +1,10 @@
+name = "programiranje-1-1"
+version = "0.1.0"
+defaultTargets = ["programiranje-1-1"]
+
+[[lean_lib]]
+name = "Programiranje11"
+
+[[lean_exe]]
+name = "programiranje-1-1"
+root = "Main"

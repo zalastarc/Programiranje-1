@@ -47,8 +47,17 @@ let rec insert_sort list =
  dodati na konec urejenega podseznama.
  (Hitreje je obrniti vrstni red seznama kot na vsakem koraku uporabiti [@].)
 [*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*)
-
-
+let rec urejanje_z_izbiranjem list =
+  match list with
+  | [] -> None
+  | x :: rest -> 
+    let rec aux min rest =
+      match rest with
+      | [] -> (min, [])
+      | y :: ys when y < min -> let (m, r) = aux y ys in (m, min :: r)
+      | y :: ys -> let (m, r) = aux min ys in (m, y :: r)
+    in
+    let (m, r) = aux x rest in Some (m, r)
 (*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*]
  Urejanje z Izbiranjem na Tabelah
 [*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
